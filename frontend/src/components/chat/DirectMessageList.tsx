@@ -1,0 +1,23 @@
+import { useChatStore } from "@/stores/useChatStore";
+import DirectMessageCard from "./DirectMessageCard";
+
+const DirectMessageList = () => {
+  const { conversations } = useChatStore();
+
+  if (!conversations) return;
+
+  const directConversations = conversations.filter(
+    (convo) => convo.type === "direct",
+  );
+
+  // Trả về container chứa toàn bộ danh sách cuộc trò chuyện
+  return (
+    <div className="flex-1 overflow-y-auto p-2 space-y-2">
+      {directConversations.map((convo) => (
+        <DirectMessageCard convo={convo} key={convo._id} />
+      ))}
+    </div>
+  );
+};
+
+export default DirectMessageList;
