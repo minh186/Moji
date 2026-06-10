@@ -3,6 +3,7 @@ import type { Conversation, Message, Participant } from "@/types/chat";
 import UserAvatar from "./UserAvatar";
 import { Card } from "../ui/card";
 import { Badge } from "../ui/badge";
+import { useState } from "react";
 
 interface MessageItemProps {
   message: Message;
@@ -12,6 +13,27 @@ interface MessageItemProps {
   lastMessageStatus: "delivered" | "seen";
 }
 
+// ─── Lightbox đơn giản để xem ảnh full-size ──────────────────────────────────
+const ImageLightbox = ({
+  src,
+  onClose,
+}: {
+  src: string;
+  onClose: () => void;
+}) => (
+  <div
+    className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+    onClick={onClose}
+  >
+    <img
+      src={src}
+      alt="Ảnh phóng to"
+      className="max-w-[90vw] max-h-[90vh] object-contain rounded-lg shadow-2xl"
+      onClick={(e) => e.stopPropagation()}
+    />
+  </div>
+);
+
 const MessageItem = ({
   message,
   index,
@@ -19,6 +41,8 @@ const MessageItem = ({
   selectedConvo,
   lastMessageStatus,
 }: MessageItemProps) => {
+  const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
+
   // Lấy phần tin nhắn trước
   const prev = index + 1 < messages.length ? messages[index + 1] : undefined;
 
@@ -36,9 +60,19 @@ const MessageItem = ({
     (p: Participant) => p._id.toString() === message.senderId.toString(),
   );
 
+  // Xác định loại nội dung
+  const hasText = !!message.content;
+  const hasImage = !!message.imgUrl;
+  const isImageOnly = hasImage && !hasText;
+
   return (
     <>
-      {/* time */}
+      {/* Lightbox */}
+      {lightboxSrc && (
+        <ImageLightbox src={lightboxSrc} onClose={() => setLightboxSrc(null)} />
+      )}
+
+      {/* Timestamp */}
       {isShowTime && (
         <span className="flex justify-center text-xs text-muted-foreground px-1">
           {formatMessageTime(new Date(message.createdAt))}
@@ -53,7 +87,7 @@ const MessageItem = ({
       >
         {/* avatar (nếu là tin nhắn của người khác mới cần hiện avatar) */}
         {!message.isOwn && (
-          <div className="w-8">
+          <div className="w-8 shrink-0">
             {isGroupBreak && (
               <UserAvatar
                 type="chat"
@@ -73,15 +107,37 @@ const MessageItem = ({
         >
           <Card
             className={cn(
-              "p-3",
               message.isOwn
                 ? "chat-bubble-sent border-0"
                 : "chat-bubble-received",
+              // Bỏ padding nếu chỉ có ảnh để ảnh sát viền bubble
+              isImageOnly ? "p-0 overflow-hidden" : "p-3",
             )}
           >
-            <p className="text-sm leading-relaxed break-words">
-              {message.content}
-            </p>
+            {/* Ảnh (nếu có) */}
+            {hasImage && (
+              <img
+                src={message.imgUrl!}
+                alt="Ảnh tin nhắn"
+                className={cn(
+                  "cursor-pointer object-contain hover:opacity-90 transition-opacity",
+                  // Ảnh kèm text thì có margin dưới, rounded khác
+                  isImageOnly
+                    ? "rounded-[inherit] max-w-full block"
+                    : "rounded-md mb-2 max-w-full block",
+                )}
+                style={{ maxWidth: 280, maxHeight: 320 }}
+                onClick={() => setLightboxSrc(message.imgUrl!)}
+                loading="lazy"
+              />
+            )}
+
+            {/* Text (nếu có) */}
+            {hasText && (
+              <p className="text-sm leading-relaxed break-words">
+                {message.content}
+              </p>
+            )}
           </Card>
 
           {/* seen/ delivered */}

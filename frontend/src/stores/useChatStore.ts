@@ -170,6 +170,29 @@ export const useChatStore = create<ChatState>()(
         }));
       },
 
+      // Cập nhật thông tin participant trong tất cả conversations
+      // Được gọi khi nhận socket "profile-updated" hoặc sau khi user tự cập nhật
+      updateParticipant: (data) => {
+        set((state) => ({
+          conversations: state.conversations.map((convo) => ({
+            ...convo,
+            participants: convo.participants.map((p) =>
+              p._id?.toString() === data.userId
+                ? {
+                    ...p,
+                    displayName: data.displayName,
+                    // Chỉ cập nhật avatarUrl nếu payload có giá trị
+                    avatarUrl:
+                      data.avatarUrl !== undefined
+                        ? data.avatarUrl
+                        : p.avatarUrl,
+                  }
+                : p,
+            ),
+          })),
+        }));
+      },
+
       markAsSeen: async () => {
         try {
           const { user } = useAuthStore.getState();

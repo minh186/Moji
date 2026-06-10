@@ -3,6 +3,10 @@ export const updateConversationAfterCreateMessage = (
   message,
   senderId,
 ) => {
+  // Nếu là ảnh-only thì hiển thị emoji ảnh ở sidebar
+  const lastMessageContent =
+    message.content || (message.imgUrl ? "📷 Đã gửi một ảnh" : "");
+
   conversation.set({
     // khi tin nhắn gửi đi, reset trạng thái đã xem
     seenBy: [],
@@ -26,7 +30,7 @@ export const updateConversationAfterCreateMessage = (
   });
 };
 
-// hàm phát đi sự kiện new message vào 1 room
+// Emit event "new-message" tới tất cả thành viên trong conversation
 export const emitNewMessage = (io, conversation, message) => {
   io.to(conversation._id.toString()).emit("new-message", {
     message,

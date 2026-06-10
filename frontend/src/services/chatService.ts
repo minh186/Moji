@@ -22,6 +22,16 @@ export const chatService = {
     return { messages: res.data.messages, cursor: res.data.nextCursor };
   },
 
+  // Upload ảnh lên Cloudinary qua backend, trả về URL để gắn vào message
+  async uploadMessageImage(file: File): Promise<string> {
+    const formData = new FormData();
+    formData.append("image", file);
+    const res = await api.post("/messages/upload-image", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return res.data.imgUrl as string;
+  },
+
   async sendDirectMessage(
     recipientId: string,
     content: string = "",

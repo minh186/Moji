@@ -2,6 +2,25 @@ import type { Socket } from "socket.io-client";
 import type { Conversation, Message } from "./chat";
 import type { Friend, FriendRequest, User } from "./user";
 
+// ─── Data shapes cho profile update ──────────────────────────────────────────
+
+// Payload gửi lên server (chỉ các field được phép sửa)
+export interface UpdateProfileData {
+  displayName: string;
+  bio?: string;
+  phone?: string;
+}
+
+// Payload nhận từ socket "profile-updated" (broadcast tới contacts)
+export interface ProfileUpdatePayload {
+  userId: string;
+  displayName: string;
+  bio?: string | null;
+  phone?: string | null;
+  avatarUrl?: string | null;
+}
+
+// ─── Auth ────────────────────────────────────────────────────────────────────
 export interface AuthState {
   accessToken: string | null;
   user: User | null;
@@ -25,12 +44,14 @@ export interface AuthState {
   refresh: () => Promise<void>;
 }
 
+// ─── Theme ───────────────────────────────────────────────────────────────────
 export interface ThemeState {
   isDark: boolean;
   toggleTheme: () => void;
   setTheme: (dark: boolean) => void;
 }
 
+// ─── Chat ────────────────────────────────────────────────────────────────────
 export interface ChatState {
   conversations: Conversation[];
   messages: Record<
@@ -73,8 +94,11 @@ export interface ChatState {
     name: string,
     memberIds: string[],
   ) => Promise<void>;
+  // Cập nhật thông tin participant sau khi nhận socket "profile-updated"
+  updateParticipant: (data: ProfileUpdatePayload) => void;
 }
 
+// ─── Socket ──────────────────────────────────────────────────────────────────
 export interface SocketState {
   socket: Socket | null;
   onlineUsers: string[];
@@ -82,6 +106,7 @@ export interface SocketState {
   disconnectSocket: () => void;
 }
 
+// ─── Friend ──────────────────────────────────────────────────────────────────
 export interface FriendState {
   friends: Friend[];
   loading: boolean;
@@ -95,6 +120,8 @@ export interface FriendState {
   getFriends: () => Promise<void>;
 }
 
+// ─── User ────────────────────────────────────────────────────────────────────
 export interface UserState {
   updateAvatarUrl: (formData: FormData) => Promise<void>;
+  updateProfile: (data: UpdateProfileData) => Promise<void>;
 }

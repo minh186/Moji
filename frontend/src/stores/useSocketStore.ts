@@ -85,7 +85,15 @@ export const useSocketStore = create<SocketState>((set, get) => ({
       useChatStore.getState().addConvo(conversation);
       socket.emit("join-conversation", conversation._id);
     });
+
+    // ── Profile updated (contact đã cập nhật thông tin cá nhân) ─────────────
+    // Backend emit tới personal room của từng contact sau khi user save profile
+    // Payload: { userId, displayName, bio, phone, avatarUrl }
+    socket.on("profile-updated", (payload) => {
+      useChatStore.getState().updateParticipant(payload);
+    });
   },
+
   disconnectSocket: () => {
     const socket = get().socket;
     if (socket) {
